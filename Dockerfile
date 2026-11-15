@@ -1,5 +1,5 @@
 # 本文件由 DeepSeek v4.1 FLASH 模型编写
-FROM node:22-bookworm-slim
+FROM node:26-bookworm-slim
 
 # better-sqlite3 优先使用预编译包，保留编译工具作为兜底
 RUN apt-get update && apt-get install -y --no-install-recommends \
