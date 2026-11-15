@@ -8,7 +8,7 @@
 ![SQLite](https://img.shields.io/badge/SQLite-better--sqlite3-003B57?logo=sqlite&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![Frontend](https://img.shields.io/badge/Frontend-Vanilla_JS-F7DF1E?logo=javascript&logoColor=black)
-![License](https://img.shields.io/badge/License-All_Rights_Reserved-lightgrey)
+[![License](https://img.shields.io/badge/License-MIT-3DA639)](LICENSE)
 
 ![界面预览](docs/screenshots/hero.png)
 
@@ -29,6 +29,7 @@
 - [常见问题](#常见问题)
 - [参与贡献](#参与贡献)
 - [声明](#声明)
+- [许可证](#许可证)
 
 ---
 
@@ -259,4 +260,15 @@ portfolio-tracker/
 - **代码编写模型：DeepSeek v4.1 FLASH**（仓库内所有源码文件头部均有标注）
 - 仓库内容已脱敏：不含真实持仓金额、真实组合配置、个人昵称、内网地址、密码与密钥；`.env` 不入库，仅提供 `.env.example`
 - 本项目仅用于个人记账，**不构成任何投资建议**；数据由使用者自行录入与判断
-- 未附带开源许可证，默认保留所有权利；引用或二次分发请先联系仓库作者
+- 以 [MIT 许可证](LICENSE) 开源，可自由使用、修改与分发，保留版权声明即可
+- 作者：[caddaric9527](https://github.com/caddaric9527)
+
+## 许可证
+
+[MIT License](LICENSE) © 2026 caddaric9527
+
+你可以自由地使用、复制、修改、合并、发布、分发、再授权或销售本软件的副本，唯一要求是在所有副本或实质性部分中保留上述版权声明与许可声明。本软件按「原样」提供，不附带任何明示或暗示的担保。
+
+---
+
+如果这个项目帮你省下了维护 Excel 表的时间，欢迎点个 ⭐

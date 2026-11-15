@@ -27,6 +27,7 @@
 - 收益配色改为绿涨红跌（`--up` 绿 / `--down` 红），删除类危险按钮拆出独立的 `--danger` 色，避免被误染
 - 仓库内容脱敏：移除真实持仓金额与配置、个人昵称、内网地址；`.env` 不入库，改提供 `.env.example`
 - 补齐工程文件：`.gitattributes`（统一 LF）、`.editorconfig`、`.nvmrc`、CI、Issue/PR 模板、dependabot
+- 以 MIT 许可证开源，新增 `LICENSE`，README 徽章与声明段同步改为 MIT，`package.json` 补 `license` 字段
 
 ## [2026.10.29]
 
