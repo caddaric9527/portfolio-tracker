@@ -123,8 +123,8 @@ NAS（飞牛 fnOS / 群晖）
 
 镜像里只 `COPY server/ public/`，`data/` 由 volume 挂载。所以：
 
-- 改前端 → 覆盖 `public/` + `restart` 就生效
-- 改后端 → 必须 `up -d --build`
+- 改前端或后端 → **都必须** `docker compose up -d --build` 重建镜像；`restart` 只是重启进程，容器内仍是镜像里的旧文件
+- 若希望改前端后免重建，可在 compose 里加一行 `- ./public:/app/public:ro` 把目录挂进去，此时改完 `restart` 即可（宿主目录必须完整，否则页面会 404）
 - 备份 → 拷 `./data/` 目录
 
 `HEALTHCHECK` 每 60 秒打一次 `/api/health`，连续 3 次失败标记 unhealthy，配合 `restart: unless-stopped` 能自动拉起被 OOM 掉的进程。

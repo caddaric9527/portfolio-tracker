@@ -235,7 +235,10 @@ portfolio-tracker/
 ## 常见问题
 
 **改了代码，浏览器还是旧页面？**
-静态资源已设 `Cache-Control: no-cache` + ETag，正常刷新即可。若改了 `server/` 必须 `docker compose up -d --build`，只改 `public/` 用 `restart` 就够。
+分两种情况，别混：
+
+1. **改了代码但容器里还是旧的** —— `server/` 与 `public/` 都是 `COPY` 进镜像的，`docker compose restart` **不会**让新文件生效，必须 `docker compose up -d --build`。判断方法：`docker compose exec portfolio grep -c "pf.dca_plan" public/app.js`，返回 0 说明镜像里是旧文件
+2. **镜像已更新但浏览器还缓存** —— 静态资源已设 `Cache-Control: no-cache` + ETag，正常刷新即可；仍不生效就 `Ctrl+Shift+R` 强制刷新
 
 **端口被占用 / 打不开？**
 改 `.env` 的 `HOST_PORT` 后 `docker compose up -d`；打不开先跑 `bash check-deploy.sh`，按 `[FAIL]` 项排查。

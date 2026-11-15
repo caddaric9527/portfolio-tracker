@@ -1,6 +1,5 @@
 投资组合收益统计 · 全新安装指南
 版本 2026.11.15
-代码由 DeepSeek v4.1 FLASH 模型编写
 ================================================
 
 本指南只有一条路径：在一台干净的设备上从零装好。
@@ -109,7 +108,10 @@
   停止      sudo docker compose down
   自检      sudo bash check-deploy.sh
   换代码    sudo bash deploy.sh --keep-data
-            只改前端（public/）可以更快：覆盖文件后 sudo docker compose restart
+            覆盖 server/ 或 public/ 后必须重建镜像：
+            sudo docker compose up -d --build
+            ⚠ restart 不会生效！public/ 和 server/ 是 COPY 进镜像的，
+              只挂载了 data/。restart 只是重启进程，用的还是镜像里的旧文件。
 
 
 九、彻底重置为刚装好的状态
