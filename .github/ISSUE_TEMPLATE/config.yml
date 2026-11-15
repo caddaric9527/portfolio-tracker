@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全问题
+    url: https://github.com/caddaric9527/portfolio-tracker/blob/main/SECURITY.md
+    about: 认证绕过、令牌伪造、注入类问题请私下反馈，不要开公开 issue
+  - name: 部署问题自查
+    url: https://github.com/caddaric9527/portfolio-tracker/blob/main/部署说明.txt
+    about: 打不开、端口冲突、镜像拉不下来，先按部署说明与 check-deploy.sh 排查

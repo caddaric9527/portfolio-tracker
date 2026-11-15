@@ -1,0 +1,33 @@
+name: 功能建议
+description: 想加个能力，或者现有流程不顺手
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提之前先看一眼 [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md) 里「不打算做的」那一节 ——
+        自动拉行情、多用户权限、引入前端框架这三类基本不会做。
+
+  - type: textarea
+    id: case
+    attributes:
+      label: 你遇到的具体场景
+      description: 描述真实使用中的麻烦，比描述想要的功能更有用
+      placeholder: 我每个月要给三个组合各录一次，想一次录完三个而不是弹三次窗
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: 你希望的解法
+    validations:
+      required: true
+
+  - type: textarea
+    id: alt
+    attributes:
+      label: 你试过的替代方案
+      description: 比如用 Excel 绕过、手动改数据库、写脚本调 API
+    validations:
+      required: false

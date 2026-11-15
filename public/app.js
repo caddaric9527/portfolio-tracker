@@ -217,7 +217,7 @@ function renderPortfolios() {
         </div>
         ${recordedThisMonth ? '<span class="tag">本月已录 ✓</span>' : `<span class="missed">${esc(curMonth)} 待录入</span>`}
       </div>
-      <div class="pf-plan">定投方案：${esc(pf.dcaPlan || '未设置')}</div>
+      <div class="pf-plan">定投方案：${esc(pf.dca_plan || pf.dcaPlan || '未设置')}</div>
       <div class="pf-body">
         <div class="pf-metrics">${metrics}</div>
         <div class="pf-spark"><span class="metric-label">收益率走势</span>${sparkline(pf.history, cur)}</div>
