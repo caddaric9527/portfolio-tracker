@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!-- 本文件由 DeepSeek v4.1 FLASH 模型编写 -->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>投资组合收益统计</title>
+  <link rel="stylesheet" href="/style.css?v=20261115">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>投资组合收益统计</h1>
+      <span class="muted small">每月录入 · 自动汇总</span>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btnAddRecord">＋ 录入本月数据</button>
+      <button class="btn" id="btnAddPortfolio">＋ 新增组合</button>
+      <button class="btn" id="btnShare" title="生成 1080 宽分享图">分享</button>
+      <button class="btn icon" id="btnSettings" title="设置与备份">⚙</button>
+      <button class="btn icon" id="btnLogout" title="退出登录">退出</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="cards" id="summaryCards"></section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>我的组合</h2>
+        <span class="muted small" id="pfCount"></span>
+      </div>
+      <div class="pf-list" id="pfList"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>收益走势</h2>
+        <div class="seg" id="trendMode">
+          <button data-mode="returnPct" class="active">收益率 %</button>
+          <button data-mode="gain">收益金额</button>
+          <button data-mode="invested">累计投入 / 市值</button>
+        </div>
+      </div>
+      <div id="trendChart"></div>
+      <p class="muted small center" id="trendEmpty" hidden>录入两个月以上的数据后，这里会出现走势曲线。</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>月度明细</h2>
+        <div class="muted small" id="detailHint"></div>
+      </div>
+      <div class="table-wrap">
+        <table id="detailTable">
+          <thead>
+            <tr>
+              <th>月份</th><th>组合</th>
+              <th class="num">投入本金</th><th class="num">当前市值</th>
+              <th class="num">收益金额</th><th class="num">收益率</th>
+              <th class="num">本月投入</th><th class="num">本月盈亏</th>
+              <th>备注</th><th class="num">操作</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- 组合表单 -->
+  <div class="modal" id="modalPortfolio">
+    <div class="modal-box">
+      <div class="modal-head"><h3 id="pfModalTitle">新增组合</h3><button class="btn icon" data-close>✕</button></div>
+      <form id="formPortfolio" class="form-grid">
+        <input type="hidden" name="id">
+        <label>组合名称<input type="text" name="name" maxlength="60" required placeholder="如：核心持有+卫星增强"></label>
+        <label>配置明细<input type="text" name="allocation" maxlength="200" placeholder="如：50% 宽基ETF + 50% 科技ETF"></label>
+        <label>定投方案<input type="text" name="dcaPlan" maxlength="200" placeholder="如：每月10日 200美元，偏差超过5%自动再平衡"></label>
+        <label>计价币种
+          <select name="currency">
+            <option value="USD">美元 $</option>
+            <option value="CNY">人民币 ¥</option>
+            <option value="HKD">港元 HK$</option>
+          </select>
+        </label>
+        <div class="modal-foot">
+          <button type="button" class="btn" data-close>取消</button>
+          <button type="submit" class="btn primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 月度录入 -->
+  <div class="modal" id="modalRecord">
+    <div class="modal-box">
+      <div class="modal-head"><h3>录入月度数据</h3><button class="btn icon" data-close>✕</button></div>
+      <form id="formRecord" class="form-grid">
+        <input type="hidden" name="recordId">
+        <label>组合<select name="portfolioId" id="recPortfolio" required></select></label>
+        <label>月份<input type="month" name="month" id="recMonth" required></label>
+        <div class="two-col">
+          <label>投入本金（累计）<input type="number" step="any" min="0" name="invested" required placeholder="如 1000.00"></label>
+          <label>当前市值<input type="number" step="any" min="0" name="value" required placeholder="如 1050.00"></label>
+        </div>
+        <label>备注<input type="text" name="note" maxlength="200" placeholder="可留空"></label>
+        <p class="muted small" id="recHint">投入本金填累计数（和表格里一致）；同一月份重复提交会覆盖旧值。</p>
+        <div class="modal-foot">
+          <button type="button" class="btn" data-close>取消</button>
+          <button type="submit" class="btn primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 设置 -->
+  <div class="modal" id="modalSettings">
+    <div class="modal-box">
+      <div class="modal-head"><h3>设置与备份</h3><button class="btn icon" data-close>✕</button></div>
+      <form id="formSettings" class="form-grid">
+        <label>汇率来源
+          <select name="fx_source">
+            <option value="auto">自动获取（open.er-api.com）</option>
+            <option value="manual">手动指定</option>
+          </select>
+        </label>
+        <div class="two-col">
+          <label>美元→人民币<input type="number" step="any" min="0" name="fx_usd_cny"></label>
+          <label>港元→人民币<input type="number" step="any" min="0" name="fx_hkd_cny"></label>
+        </div>
+        <p class="muted small">组合全为同一币种时汇总直接用该币种；跨币种时折人民币合计。手动模式下用上面填的汇率。</p>
+        <div class="modal-foot">
+          <button type="button" class="btn" data-close>取消</button>
+          <button type="submit" class="btn primary">保存设置</button>
+        </div>
+      </form>
+      <div class="backup-row">
+        <button class="btn" id="btnExport">导出 JSON 备份</button>
+        <label class="btn file-btn">导入备份（合并）<input type="file" id="fileImport" accept=".json" hidden></label>
+        <label class="btn danger file-btn">替换导入<input type="file" id="fileImportReplace" accept=".json" hidden></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分享图 -->
+  <div class="modal" id="modalShare">
+    <div class="modal-box" style="max-width:560px">
+      <div class="modal-head"><h3>分享图片</h3><button class="btn icon" data-close>✕</button></div>
+      <div class="share-preview"><img id="shareImg" alt="分享图预览"></div>
+      <p class="muted small" id="shareMeta"></p>
+      <div class="modal-foot">
+        <button class="btn" data-close>关闭</button>
+        <button class="btn primary" id="btnDownloadShare">下载图片</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="/app.js?v=20261115"></script>
+</body>
+</html>

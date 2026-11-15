@@ -1,0 +1,108 @@
+投资组合收益统计 · 全新设备部署指南
+版本 2026.11.15
+代码由 DeepSeek v4.1 FLASH 模型编写
+================================================
+
+本包用于在一台干净的设备上从零部署，不依赖任何旧版本文件。
+网站带密码认证，未登录看不到任何数据。
+
+
+一、前提
+  设备上已安装 Docker（含 docker compose 插件）
+    飞牛 fnOS   应用中心 → Docker
+    群晖 DSM    套件中心 → Container Manager
+    普通 Linux  已装 docker-ce 与 docker-compose-plugin
+  不需要预装 Node.js，镜像里自带。
+
+
+二、三步部署
+  1) 获取代码
+     方式 A  git clone（已登录 GitHub 或仓库为公开时）
+       mkdir -p /vol1/1000/docker
+       cd /vol1/1000/docker
+       sudo git clone <仓库地址> portfolio
+       cd portfolio
+     方式 B  在 GitHub 页面 Code → Download ZIP，上传后解压
+       mkdir -p /vol1/1000/docker/portfolio
+       cd /vol1/1000/docker/portfolio
+       sudo unzip -o portfolio-tracker-main.zip -d . && rm -f portfolio-tracker-main.zip
+       解压后当前目录应直接看到 Dockerfile、docker-compose.yml、server、public，
+       不能多出一层同名文件夹。
+     不管哪种方式，node_modules 与 data 都不需要（也没有），构建时自动生成。
+
+
+  2) 一条命令部署
+       sudo bash deploy.sh
+     它会自动：生成访问密码 → 构建镜像 → 启动容器 → 等健康检查 → 打印访问地址 → 自检。
+
+  3) 记下终端最后打印的密码
+        🔑 已自动生成访问密码：xxxxxxxxxxxxxxxx
+     浏览器打开 http://<设备IP>:8888 ，输入该密码即可。
+     密码同时写入了本目录的 .env，随时可以改。
+
+
+三、访问密码管理
+  查看密码      grep AUTH_PASSWORD .env
+  改成自己的    编辑 .env → AUTH_PASSWORD=你的密码 → sudo docker compose up -d
+  改登录有效期  编辑 .env → AUTH_DAYS=7（天，默认 30）→ sudo docker compose up -d
+  关闭密码认证  .env 里 AUTH_PASSWORD= 留空 → sudo docker compose up -d（不推荐）
+  忘记密码      按上面「改成自己的」操作即可重置
+  让所有设备强制重新登录
+      sudo rm -f data/.auth-secret && sudo docker compose restart
+      （签名密钥变了，所有旧登录凭证立即失效）
+
+  安全说明
+    - 密码只存在 .env 与容器环境变量里，不写入数据库
+    - 登录凭证是 HttpOnly Cookie，前端 JS 读不到
+    - 同一 IP 连续输错 5 次会锁定 10 分钟
+    - 走的是 HTTP 明文，仅适合内网；如需外网访问请套 HTTPS（Nginx Proxy Manager 等）
+
+
+四、开始使用
+  1. 点「＋ 新增组合」，填名称、配置明细、定投方案、币种
+  2. 每月点「＋ 录入本月数据」，选组合和月份，填
+       投入本金（累计） / 当前市值
+     系统自动算收益金额、收益率、本月盈亏
+  3. 点「分享」可生成 1080 宽 PNG 图片
+  4. 右上 ⚙ 可导出/导入 JSON 备份，右侧「退出」注销登录
+
+
+五、改端口
+  改 .env 里的 HOST_PORT，例如
+     HOST_PORT=9000
+  然后 sudo docker compose up -d
+
+
+六、数据与备份
+  数据库文件  ./data/portfolio.db        （容器重建不丢，删除才会丢）
+  备份方式 1  网页右上 ⚙ → 导出 JSON
+  备份方式 2  cp data/portfolio.db 到别处
+  恢复方式 1  网页 ⚙ → 导入备份（合并）
+  恢复方式 2  停容器 → 用备份覆盖 data/portfolio.db → 同时删掉 data/portfolio.db-shm 与 -wal → 启动
+
+
+七、日常维护
+  看状态    sudo docker compose ps
+  看日志    sudo docker compose logs --tail=50
+  重启      sudo docker compose restart
+  停止      sudo docker compose down
+  更新代码  覆盖 server/ 与 public/ 后 sudo docker compose up -d --build
+  自检      sudo bash check-deploy.sh
+
+
+八、常见问题
+  端口被占      改 .env 的 HOST_PORT 后 up -d
+  拉镜像慢      Docker → 设置 → 镜像仓库，加国内加速地址后重试
+  权限不足      sudo usermod -aG docker $USER && newgrp docker
+  构建失败      多为网络问题，重试；一直失败把日志发出来
+  打不开页面    sudo bash check-deploy.sh 按 [FAIL] 项排查；
+                确认防火墙放行端口；确认访问的是设备 IP
+  一直提示密码错 确认 .env 里 AUTH_PASSWORD 与输入一致；被锁定就等 10 分钟，
+                或 sudo docker compose restart 清空限流计数
+  忘了密码      .env 里改一个新密码，sudo docker compose up -d 即可
+
+
+九、卸载（数据会一起删除，先备份）
+  sudo docker compose down
+  sudo docker rmi portfolio-tracker:2026.11.15
+  sudo rm -rf ./data

@@ -1,0 +1,16 @@
+# 本文件由 DeepSeek v4.1 FLASH 模型编写
+services:
+  portfolio:
+    image: portfolio-tracker:2026.11.15
+    build: .
+    container_name: portfolio
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-8888}:8080"   # 宿主端口在 .env 里改
+    volumes:
+      - ./data:/app/data            # SQLite 数据库落盘
+    environment:
+      - TZ=Asia/Shanghai
+      - PORT=8080
+      - AUTH_PASSWORD=${AUTH_PASSWORD:-}
+      - AUTH_DAYS=${AUTH_DAYS:-30}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<!-- 本文件由 DeepSeek v4.1 FLASH 模型编写 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>登录 · 投资组合收益统计</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+<style>
+  :root {
+    --primary: #2e6be6;
+    --text: #1d2433;
+    --muted: #6b7688;
+    --border: #dfe4ee;
+    --danger: #d92f2f;
+    --bg: #f2f5fa;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: radial-gradient(1200px 600px at 50% -10%, #e6eeff 0%, var(--bg) 55%, #eef1f6 100%);
+    font: 14px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    width: 100%;
+    max-width: 380px;
+    padding: 34px 30px 28px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(29, 36, 51, .09), 0 2px 6px rgba(29, 36, 51, .04);
+  }
+  .logo {
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2e6be6, #4d8bff);
+    color: #fff; font-size: 20px;
+    margin-bottom: 18px;
+  }
+  h1 { margin: 0 0 6px; font-size: 18px; font-weight: 650; letter-spacing: -.2px; }
+  .sub { margin: 0 0 24px; font-size: 13px; color: var(--muted); }
+  label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+  input[type="password"] {
+    width: 100%;
+    padding: 11px 13px;
+    font-size: 15px;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type="password"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46, 107, 230, .14); }
+  button {
+    width: 100%;
+    margin-top: 16px;
+    padding: 11px 14px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary);
+    border: 0;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background .15s, opacity .15s;
+  }
+  button:hover:not(:disabled) { background: #2560d4; }
+  button:disabled { opacity: .65; cursor: default; }
+  .msg { min-height: 20px; margin-top: 12px; font-size: 13px; color: var(--danger); }
+  .foot { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <form class="card" id="form" autocomplete="off">
+    <div class="logo">🔒</div>
+    <h1>投资组合收益统计</h1>
+    <p class="sub">请输入访问密码</p>
+
+    <label for="pw">密码</label>
+    <input type="password" id="pw" name="password" autocomplete="current-password" autofocus required>
+
+    <button type="submit" id="btn">进入</button>
+    <div class="msg" id="msg"></div>
+
+    <div class="foot" id="foot">登录状态会保留一段时间，公共设备使用后请右上角退出。</div>
+  </form>
+
+<script>
+  const form = document.getElementById('form');
+  const pw = document.getElementById('pw');
+  const btn = document.getElementById('btn');
+  const msg = document.getElementById('msg');
+  let busy = false;
+
+  function fail(text) {
+    msg.textContent = text;
+    pw.select();
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    const value = pw.value;
+    if (!value) return fail('请输入密码');
+
+    busy = true;
+    btn.disabled = true;
+    btn.textContent = '验证中…';
+    msg.textContent = '';
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: value }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        location.replace('/');
+        return;
+      }
+      fail(data.error || `登录失败（${res.status}）`);
+    } catch {
+      fail('无法连接服务器，请检查网络');
+    } finally {
+      busy = false;
+      btn.disabled = false;
+      btn.textContent = '进入';
+    }
+  });
+
+  // 已登录的直接进站
+  fetch('/api/session').then((r) => r.json()).then((s) => {
+    if (s.days) document.getElementById('foot').textContent =
+      `登录状态保留 ${s.days} 天，公共设备使用后请右上角退出。`;
+    if (s.authed || s.authRequired === false) location.replace('/');
+  }).catch(() => {});
+</script>
+</body>
+</html>

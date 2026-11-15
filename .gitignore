@@ -1,0 +1,13 @@
+node_modules/
+data/
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+
+# 本地配置与密钥，绝不入库
+.env
+.env.local
+.env.*.local
+.auth-secret
+*.log
