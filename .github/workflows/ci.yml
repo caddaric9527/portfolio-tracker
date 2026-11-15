@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: 语法与冒烟测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci --no-audit --no-fund
+
+      - name: 语法检查
+        run: |
+          set -e
+          for f in server/*.js public/app.js; do
+            node --check "$f"
+            echo "ok  $f"
+          done
+          bash -n deploy.sh
+          bash -n check-deploy.sh
+          echo "ok  deploy.sh / check-deploy.sh"
+
+      - name: 冒烟测试（启动 → 健康检查 → 认证 → 写入 → 覆盖）
+        run: |
+          set -euo pipefail
+          DATA_DIR="$PWD/.tmpdata" PORT=8099 AUTH_PASSWORD=ci-pass node server/index.js &
+          APP_PID=$!
+          trap 'kill $APP_PID 2>/dev/null || true' EXIT
+
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8099/api/health >/dev/null; then break; fi
+            sleep 1
+          done
+
+          echo "→ 健康检查"
+          curl -sf http://127.0.0.1:8099/api/health | grep -q '"ok":true'
+
+          echo "→ 未登录访问业务接口应为 401"
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/api/overview)
+          [ "$code" = "401" ] || { echo "期望 401，实际 $code"; exit 1; }
+
+          echo "→ 登录"
+          curl -sf -c jar.txt -X POST http://127.0.0.1:8099/api/login \
+            -H 'Content-Type: application/json' -d '{"password":"ci-pass"}' >/dev/null
+          curl -sf -b jar.txt http://127.0.0.1:8099/api/overview | grep -q '"summary"'
+
+          echo "→ 新建组合 + 录入记录"
+          curl -sf -b jar.txt -X POST http://127.0.0.1:8099/api/portfolios \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"CI 测试组合","currency":"USD"}' >/dev/null
+          curl -sf -b jar.txt -X POST http://127.0.0.1:8099/api/records \
+            -H 'Content-Type: application/json' \
+            -d '{"portfolioId":1,"month":"2026-01","invested":100,"value":110}' >/dev/null
+
+          echo "→ 同月重复提交应覆盖而非新增"
+          curl -sf -b jar.txt -X POST http://127.0.0.1:8099/api/records \
+            -H 'Content-Type: application/json' \
+            -d '{"portfolioId":1,"month":"2026-01","invested":100,"value":120}' >/dev/null
+          n=$(curl -sf -b jar.txt 'http://127.0.0.1:8099/api/records?portfolioId=1' | grep -o '"month"' | wc -l)
+          [ "$n" = "1" ] || { echo "期望 1 条记录，实际 $n 条"; exit 1; }
+
+          echo "→ 非法月份应 400"
+          code=$(curl -s -b jar.txt -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8099/api/records \
+            -H 'Content-Type: application/json' \
+            -d '{"portfolioId":1,"month":"2026-13","invested":1,"value":1}')
+          [ "$code" = "400" ] || { echo "期望 400，实际 $code"; exit 1; }
+
+          echo "→ 汇总数值"
+          curl -sf -b jar.txt http://127.0.0.1:8099/api/overview | grep -q '"returnPct":20'
+          echo "全部通过"
+
+  docker:
+    name: 镜像构建
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker build
+        run: docker build -t portfolio-tracker:ci .
